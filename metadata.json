@@ -1,0 +1,6 @@
+{
+  "name": "JEVRA — Finance & Accountability",
+  "description": "Unified financial management and accountability SaaS platform for individuals, families, and organisations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
