@@ -10,11 +10,10 @@ import { TransactionsView } from './components/views/TransactionsView';
 import { ApprovalsView } from './components/views/ApprovalsView';
 import { BudgetsView } from './components/views/BudgetsView';
 import { BillsView } from './components/views/BillsView';
+import { LoansView } from './components/views/LoansView';
 import { FamilyGroupsView } from './components/views/FamilyGroupsView';
 import { OrganisationsView } from './components/views/OrganisationsView';
-import { EvidenceVaultView } from './components/views/EvidenceVaultView';
 import { ReportsView } from './components/views/ReportsView';
-import { IntelligenceView } from './components/views/IntelligenceView';
 import { NotificationsView } from './components/views/NotificationsView';
 import { SettingsView } from './components/views/SettingsView';
 import { AddTransactionModal } from './components/modals/AddTransactionModal';
@@ -145,15 +144,11 @@ function MainApp() {
 
             {currentTab === 'bills' && <BillsView />}
 
-            {currentTab === 'loans' && <BillsView />}
+            {currentTab === 'loans' && <LoansView />}
 
             {currentTab === 'budgets' && <BudgetsView />}
 
-            {currentTab === 'evidence' && <EvidenceVaultView />}
-
             {currentTab === 'reports' && <ReportsView />}
-
-            {currentTab === 'intelligence' && <IntelligenceView />}
 
             {currentTab === 'notifications' && <NotificationsView />}
 

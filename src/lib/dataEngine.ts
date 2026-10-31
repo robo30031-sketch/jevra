@@ -1452,6 +1452,82 @@ class JevraDataEngine {
     return this.loans.filter((l) => l.workspace_id === workspaceId);
   }
 
+  public addLoan(
+    userId: string,
+    workspaceId: string,
+    data: {
+      lender_name: string;
+      borrower_name: string;
+      principal_amount: number;
+      outstanding_amount?: number;
+      due_date?: string | null;
+      loan_type: Loan['loan_type'];
+      status?: Loan['status'];
+    }
+  ): { success: boolean; loan?: Loan; error?: string } {
+    if (!this.hasRole(userId, workspaceId, ['owner', 'finance_manager', 'treasurer'])) {
+      return { success: false, error: 'Permission denied: Insufficient privileges.' };
+    }
+    const loan: Loan = {
+      id: `loan-${Date.now()}`,
+      workspace_id: workspaceId,
+      lender_name: data.lender_name,
+      borrower_name: data.borrower_name,
+      principal_amount: data.principal_amount,
+      outstanding_amount: data.outstanding_amount !== undefined ? data.outstanding_amount : data.principal_amount,
+      due_date: data.due_date || null,
+      loan_type: data.loan_type,
+      status: data.status || 'active',
+      created_by: userId,
+      created_at: new Date().toISOString(),
+    };
+    this.loans.push(loan);
+    this.appendAuditLog(workspaceId, userId, 'LOAN_RECORDED', 'loans', loan.id, null, {
+      lender: loan.lender_name,
+      borrower: loan.borrower_name,
+      amount: loan.principal_amount,
+      type: loan.loan_type,
+    });
+    this.persist();
+    return { success: true, loan };
+  }
+
+  public settleLoan(
+    userId: string,
+    workspaceId: string,
+    loanId: string,
+    settledAmount?: number
+  ): { success: boolean; error?: string } {
+    if (!this.hasRole(userId, workspaceId, ['owner', 'finance_manager', 'treasurer'])) {
+      return { success: false, error: 'Permission denied: Insufficient privileges.' };
+    }
+    const loan = this.loans.find((l) => l.id === loanId && l.workspace_id === workspaceId);
+    if (!loan) return { success: false, error: 'Loan record not found.' };
+
+    const previousOutstanding = loan.outstanding_amount;
+    if (settledAmount !== undefined && settledAmount > 0 && settledAmount < loan.outstanding_amount) {
+      loan.outstanding_amount -= settledAmount;
+      if (loan.outstanding_amount === 0) {
+        loan.status = 'settled';
+      }
+    } else {
+      loan.outstanding_amount = 0;
+      loan.status = 'settled';
+    }
+
+    this.appendAuditLog(
+      workspaceId,
+      userId,
+      loan.status === 'settled' ? 'LOAN_SETTLED' : 'LOAN_PARTIAL_REPAYMENT',
+      'loans',
+      loan.id,
+      { outstanding: previousOutstanding },
+      { outstanding: loan.outstanding_amount, status: loan.status }
+    );
+    this.persist();
+    return { success: true };
+  }
+
   public getContributions(userId: string, workspaceId: string): (Contribution & { contributor?: Profile })[] {
     if (!this.isMember(userId, workspaceId)) return [];
     return this.contributions

@@ -11,9 +11,7 @@ import {
   CalendarClock,
   Handshake,
   PieChart,
-  FileCheck2,
   BarChart3,
-  Sparkles,
   Bell,
   Settings,
   PlusCircle,
@@ -39,9 +37,7 @@ export type NavigationTab =
   | 'bills'
   | 'loans'
   | 'budgets'
-  | 'evidence'
   | 'reports'
-  | 'intelligence'
   | 'notifications'
   | 'settings';
 
@@ -85,9 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'bills', label: 'Bills & Commitments', icon: CalendarClock },
     { id: 'loans', label: 'Lending & Borrowing', icon: Handshake },
     { id: 'budgets', label: 'Budget & Savings', icon: PieChart },
-    { id: 'evidence', label: 'Evidence Vault', icon: FileCheck2 },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
-    { id: 'intelligence', label: 'JEVRA Intelligence', icon: Sparkles },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
