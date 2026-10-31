@@ -20,8 +20,12 @@ interface WorkspaceContextType {
   createWorkspace: (data: {
     name: string;
     workspace_type: WorkspaceType;
+    workspace_category?: import('../types/database').WorkspaceCategory;
     currency?: string;
     description?: string;
+    institution_details?: import('../types/database').InstitutionalDetails;
+    verification_status?: import('../types/database').VerificationStatus;
+    is_demo?: boolean;
   }) => Promise<{ success: boolean; workspace?: Workspace; error?: string }>;
   inviteMember: (email: string, role: WorkspaceRole) => Promise<{ success: boolean; error?: string }>;
   updateMemberRole: (targetUserId: string, newRole: WorkspaceRole) => Promise<{ success: boolean; error?: string }>;
@@ -107,8 +111,12 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const createWorkspace = async (data: {
     name: string;
     workspace_type: WorkspaceType;
+    workspace_category?: import('../types/database').WorkspaceCategory;
     currency?: string;
     description?: string;
+    institution_details?: import('../types/database').InstitutionalDetails;
+    verification_status?: import('../types/database').VerificationStatus;
+    is_demo?: boolean;
   }) => {
     if (!currentUser) return { success: false, error: 'Not authenticated' };
 

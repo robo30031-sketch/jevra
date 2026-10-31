@@ -8,19 +8,33 @@ interface AuthContextType {
   isLoading: boolean;
   isSupabaseLive: boolean;
   supabaseStatus: string;
+  isDemoMode: boolean;
   allUsers: Profile[];
   signIn: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, password: string, fullName: string, preferredCurrency?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   switchUser: (userId: string) => void;
+  enterDemoMode: () => void;
+  exitDemoMode: () => void;
   updateProfile: (updates: Partial<Profile>) => Promise<{ success: boolean; error?: string }>;
   refreshConnection: () => Promise<void>;
 }
 
+export const DEMO_USER: Profile = {
+  id: 'demo-visitor-user-999',
+  full_name: 'JEVRA Demo Explorer',
+  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+  phone: '+91 99999 00000',
+  preferred_currency: 'INR',
+  created_at: '2025-01-01T00:00:00Z',
+  updated_at: '2025-01-01T00:00:00Z',
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const ACTIVE_USER_STORAGE_KEY = 'jevra_active_user_id';
+const DEMO_MODE_STORAGE_KEY = 'jevra_is_demo_mode';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
@@ -65,6 +79,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Local / Offline / Demo mode restore
+      if (localStorage.getItem(DEMO_MODE_STORAGE_KEY) === 'true') {
+        setCurrentUser(DEMO_USER);
+        setIsLoading(false);
+        return;
+      }
+
       const savedUserId = localStorage.getItem(ACTIVE_USER_STORAGE_KEY);
       const user = savedUserId ? dataEngine.getProfile(savedUserId) : SEED_USERS[0];
       setCurrentUser(user || SEED_USERS[0]);
@@ -244,7 +264,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, message: 'Password reset simulation: Instructions sent to email.' };
   };
 
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
+    return localStorage.getItem(DEMO_MODE_STORAGE_KEY) === 'true';
+  });
+
+  const enterDemoMode = () => {
+    setIsDemoMode(true);
+    localStorage.setItem(DEMO_MODE_STORAGE_KEY, 'true');
+    setCurrentUser(DEMO_USER);
+  };
+
+  const exitDemoMode = () => {
+    setIsDemoMode(false);
+    localStorage.removeItem(DEMO_MODE_STORAGE_KEY);
+    setCurrentUser(null);
+    localStorage.removeItem(ACTIVE_USER_STORAGE_KEY);
+  };
+
   const switchUser = (userId: string) => {
+    if (isDemoMode) {
+      setIsDemoMode(false);
+      localStorage.removeItem(DEMO_MODE_STORAGE_KEY);
+    }
     const target = dataEngine.getProfile(userId);
     if (target) {
       setCurrentUser(target);
@@ -269,16 +310,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       isSupabaseLive,
       supabaseStatus,
+      isDemoMode,
       allUsers,
       signIn,
       signUp,
       signOut,
       resetPassword,
       switchUser,
+      enterDemoMode,
+      exitDemoMode,
       updateProfile,
       refreshConnection: checkSupabase,
     }),
-    [currentUser, isLoading, isSupabaseLive, supabaseStatus, allUsers]
+    [currentUser, isLoading, isSupabaseLive, supabaseStatus, isDemoMode, allUsers]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

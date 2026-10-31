@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Shield, Lock, Mail, User, KeyRound, ArrowRight, CheckCircle2, AlertCircle, Sparkles, Building2, UserCheck } from 'lucide-react';
-import { CURRENCY_SYMBOLS } from '../types/database';
+import { Shield, Lock, Mail, User, ArrowRight, CheckCircle2, AlertCircle, Compass, Sparkles } from 'lucide-react';
 
 interface AuthViewProps {
   onSuccess?: () => void;
+  onRequestOnboarding?: () => void;
 }
 
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
-export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
-  const { signIn, signUp, resetPassword, switchUser, allUsers, isSupabaseLive, supabaseStatus } = useAuth();
+export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, onRequestOnboarding }) => {
+  const { signIn, signUp, resetPassword, enterDemoMode } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +30,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
       if (mode === 'signin') {
         const res = await signIn(email, password);
         if (!res.success) {
-          setErrorMsg(res.error || 'Failed to sign in. Verify your credentials.');
+          setErrorMsg(res.error || 'Failed to sign in. Please verify your credentials.');
         } else {
           onSuccess?.();
         }
@@ -44,8 +44,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
         if (!res.success) {
           setErrorMsg(res.error || 'Registration failed');
         } else {
-          setSuccessMsg('Account created! Your personal workspace is ready.');
-          setTimeout(() => onSuccess?.(), 800);
+          setSuccessMsg('Account created successfully!');
+          setTimeout(() => {
+            if (onRequestOnboarding) {
+              onRequestOnboarding();
+            } else {
+              onSuccess?.();
+            }
+          }, 600);
         }
       } else if (mode === 'forgot') {
         const res = await resetPassword(email);
@@ -60,8 +66,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
     }
   };
 
-  const handleQuickSwitch = (userId: string) => {
-    switchUser(userId);
+  const handleDemoClick = () => {
+    enterDemoMode();
     onSuccess?.();
   };
 
@@ -79,8 +85,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Brand header */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-[1.5px] shadow-[0_0_35px_rgba(37,99,235,0.35)] mb-4">
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-[1.5px] shadow-[0_0_35px_rgba(37,99,235,0.35)] mb-3">
             <div className="flex items-center justify-center w-full h-full rounded-[14px] bg-[#0A1128]">
               <Shield className="w-7 h-7 text-cyan-400 stroke-[2.2]" />
             </div>
@@ -89,12 +95,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">
             Every Rupee. Every Responsibility. Every Record.
           </p>
-
-          {/* Connection status tag */}
-          <div className="mt-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] bg-slate-900/80 border border-slate-800 text-slate-400">
-            <span className={`w-2 h-2 rounded-full ${isSupabaseLive ? 'bg-emerald-400 animate-pulse' : 'bg-cyan-400'}`} />
-            <span>{isSupabaseLive ? 'Live Supabase PostgreSQL Connected' : 'Relational Engine Active (RLS Ready)'}</span>
-          </div>
         </div>
 
         {/* Card */}
@@ -103,7 +103,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           <div className="flex border-b border-slate-800 pb-3 mb-6">
             <button
               onClick={() => { setMode('signin'); setErrorMsg(null); setSuccessMsg(null); }}
-              className={`flex-1 pb-2 text-sm font-medium transition-all text-center border-b-2 -mb-[13px] ${
+              className={`flex-1 pb-2 text-sm font-semibold transition-all text-center border-b-2 -mb-[13px] cursor-pointer ${
                 mode === 'signin'
                   ? 'border-cyan-400 text-cyan-400'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -113,7 +113,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
             </button>
             <button
               onClick={() => { setMode('signup'); setErrorMsg(null); setSuccessMsg(null); }}
-              className={`flex-1 pb-2 text-sm font-medium transition-all text-center border-b-2 -mb-[13px] ${
+              className={`flex-1 pb-2 text-sm font-semibold transition-all text-center border-b-2 -mb-[13px] cursor-pointer ${
                 mode === 'signup'
                   ? 'border-cyan-400 text-cyan-400'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -124,14 +124,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           </div>
 
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/50 text-red-200 text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-red-950/40 border border-red-800/50 text-red-200 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-emerald-200 text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/50 text-emerald-200 text-xs flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
@@ -140,7 +140,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   <input
@@ -149,14 +149,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Priya Sharma"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
+                    className="w-full pl-9 pr-3 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">Email Address</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 <input
@@ -165,7 +165,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-9 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
                 />
               </div>
             </div>
@@ -173,12 +173,12 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
             {mode !== 'forgot' && (
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-slate-300">Password</label>
+                  <label className="text-xs font-semibold text-slate-300">Password</label>
                   {mode === 'signin' && (
                     <button
                       type="button"
                       onClick={() => setMode('forgot')}
-                      className="text-[11px] text-cyan-400 hover:underline"
+                      className="text-[11px] text-cyan-400 hover:underline cursor-pointer"
                     >
                       Forgot password?
                     </button>
@@ -192,7 +192,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
+                    className="w-full pl-9 pr-3 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
                   />
                 </div>
               </div>
@@ -200,11 +200,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
 
             {mode === 'signup' && (
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Preferred Currency</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Preferred Currency</label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-400 transition"
+                  className="w-full px-3 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-white focus:outline-none focus:border-cyan-400 transition"
                 >
                   <option value="INR">INR (₹) — Indian Rupee (Default)</option>
                   <option value="USD">USD ($) — US Dollar</option>
@@ -213,18 +213,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
                   <option value="AED">AED — UAE Dirham</option>
                   <option value="SGD">SGD (S$) — Singapore Dollar</option>
                 </select>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Onboarding creates your default Personal Vault automatically.
-                </p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/30 transition disabled:opacity-60 cursor-pointer"
+              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/30 transition disabled:opacity-60 cursor-pointer"
             >
-              <span>{loading ? 'Processing...' : mode === 'signin' ? 'Sign In to JEVRA' : mode === 'signup' ? 'Create Account & Vault' : 'Send Recovery Link'}</span>
+              <span>{loading ? 'Processing...' : mode === 'signin' ? 'Sign In to JEVRA' : mode === 'signup' ? 'Continue to Workspace Setup' : 'Send Recovery Link'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -233,48 +230,31 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess }) => {
             <div className="mt-4 text-center">
               <button
                 onClick={() => setMode('signin')}
-                className="text-xs text-slate-400 hover:text-white transition"
+                className="text-xs text-slate-400 hover:text-white transition cursor-pointer"
               >
                 Back to Sign In
               </button>
             </div>
           )}
 
-          {/* Quick Test Accounts for Phase 1 Testing */}
+          {/* Interactive Demo Mode Button (Explore JEVRA Demo) */}
           <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-cyan-400" />
-                Quick Test Personas (Phase 1 Security Tests)
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {allUsers.slice(0, 4).map((u, i) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleQuickSwitch(u.id)}
-                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 text-left transition group cursor-pointer"
-                >
-                  <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 border border-slate-700">
-                    <img src={u.avatar_url || `https://avatar.vercel.sh/${u.id}`} alt={u.full_name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-200 group-hover:text-cyan-300 truncate">
-                      {u.full_name.split(' ')[0]}
-                    </p>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {i === 0 ? 'Owner / Priya' : i === 1 ? 'Treasurer / Rahul' : i === 2 ? 'Approver / Ananya' : 'Outsider / Vikram'}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={handleDemoClick}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-cyan-300 hover:text-cyan-200 font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              <Compass className="w-4 h-4 text-cyan-400" />
+              <span>Explore JEVRA Demo (Sample Data)</span>
+            </button>
+            <p className="text-center text-[10px] text-slate-400 mt-2">
+              Explore realistic sample dashboards for schools, hospitals, offices &amp; personal vaults without registration.
+            </p>
           </div>
         </div>
 
-        {/* Security disclaimer */}
+        {/* Security watermark */}
         <p className="text-center text-[11px] text-slate-500 mt-4">
-          Protected by PostgreSQL Row Level Security (RLS) &amp; Append-Only Audit Trigger
+          Encrypted Financial Governance &amp; Multi-Tenant Data Isolation
         </p>
       </div>
     </div>

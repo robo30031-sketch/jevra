@@ -65,9 +65,11 @@ export const SEED_WORKSPACES: Workspace[] = [
     id: 'ws-priya-personal-001',
     name: "Priya's Personal Vault",
     workspace_type: 'personal',
+    workspace_category: 'personal_finance',
+    verification_status: 'verified',
     owner_id: '11111111-1111-4111-8111-111111111111',
     currency: 'INR',
-    description: 'Personal financial ledger and investments',
+    description: 'Personal financial ledger, savings and investments',
     created_at: '2025-01-01T08:05:00Z',
     updated_at: '2025-01-01T08:05:00Z',
   },
@@ -75,9 +77,17 @@ export const SEED_WORKSPACES: Workspace[] = [
     id: 'ws-palmgrove-org-002',
     name: 'Palm Grove Apartments RWA',
     workspace_type: 'organisation',
+    workspace_category: 'society_apartment',
+    verification_status: 'verified',
     owner_id: '11111111-1111-4111-8111-111111111111',
     currency: 'INR',
     description: 'Apartment Owners Association treasury, maintenance dues & vendor invoices',
+    institution_details: {
+      institution_name: 'Palm Grove Resident Welfare Association',
+      registration_number: 'RWA-BLR-2022-894',
+      total_units_or_members: 120,
+      admin_name: 'Priya Sharma (President)',
+    },
     created_at: '2025-01-02T10:00:00Z',
     updated_at: '2025-01-02T10:00:00Z',
   },
@@ -85,6 +95,8 @@ export const SEED_WORKSPACES: Workspace[] = [
     id: 'ws-rahul-personal-003',
     name: "Rahul's Personal Vault",
     workspace_type: 'personal',
+    workspace_category: 'personal_finance',
+    verification_status: 'verified',
     owner_id: '22222222-2222-4222-8222-222222222222',
     currency: 'INR',
     description: 'Personal salary and family savings',
@@ -95,11 +107,91 @@ export const SEED_WORKSPACES: Workspace[] = [
     id: 'ws-vikram-personal-004',
     name: "Vikram's Personal Vault",
     workspace_type: 'personal',
+    workspace_category: 'personal_finance',
+    verification_status: 'verified',
     owner_id: '44444444-4444-4444-8444-444444444444',
     currency: 'INR',
     description: 'Vikram private finance workspace',
     created_at: '2025-01-04T11:05:00Z',
     updated_at: '2025-01-04T11:05:00Z',
+  },
+  // SAMPLE DEMO WORKSPACES (Exploration only — flagged as SAMPLE DATA)
+  {
+    id: 'ws-demo-school-005',
+    name: "St. Jude's Higher Secondary School",
+    workspace_type: 'organisation',
+    workspace_category: 'school_education',
+    verification_status: 'verified',
+    owner_id: '11111111-1111-4111-8111-111111111111',
+    currency: 'INR',
+    description: 'Academic fee collections, laboratory budgets and teacher payroll funds',
+    is_demo: true,
+    institution_details: {
+      institution_name: "St. Jude's Higher Secondary School",
+      registration_number: 'EDU-TN-4491-09',
+      location: 'Civil Lines, Chennai',
+      admin_name: 'Dr. Arthur Vance (Principal)',
+      total_units_or_members: 1450,
+    },
+    created_at: '2025-01-05T09:00:00Z',
+    updated_at: '2025-01-05T09:00:00Z',
+  },
+  {
+    id: 'ws-demo-hospital-006',
+    name: 'City Care Multispeciality Hospital',
+    workspace_type: 'organisation',
+    workspace_category: 'hospital_health',
+    verification_status: 'verified',
+    owner_id: '11111111-1111-4111-8111-111111111111',
+    currency: 'INR',
+    description: 'Emergency ward budgets, pharmacy inventory procurement, and ICU maintenance',
+    is_demo: true,
+    institution_details: {
+      institution_name: 'City Care Healthcare Foundation',
+      registration_number: 'HOSP-MUM-2018-912',
+      location: 'Andheri East, Mumbai',
+      admin_name: 'Dr. Meenakshi Iyer (Medical Superintendent)',
+      department_name: 'Emergency & Critical Care',
+    },
+    created_at: '2025-01-06T10:00:00Z',
+    updated_at: '2025-01-06T10:00:00Z',
+  },
+  {
+    id: 'ws-demo-office-007',
+    name: 'Apex Cloud Solutions Pvt Ltd',
+    workspace_type: 'organisation',
+    workspace_category: 'office_company',
+    verification_status: 'verified',
+    owner_id: '11111111-1111-4111-8111-111111111111',
+    currency: 'INR',
+    description: 'Corporate client billings, engineering cloud credits, and employee travel expenses',
+    is_demo: true,
+    institution_details: {
+      institution_name: 'Apex Cloud Solutions Private Limited',
+      registration_number: 'U72200KA2021PTC145',
+      location: 'Indiranagar, Bengaluru',
+      admin_name: 'Rajesh Kulkarni (Finance Director)',
+    },
+    created_at: '2025-01-07T11:00:00Z',
+    updated_at: '2025-01-07T11:00:00Z',
+  },
+  {
+    id: 'ws-demo-police-008',
+    name: 'Central Sector Police Station',
+    workspace_type: 'organisation',
+    workspace_category: 'police_station',
+    verification_status: 'verified',
+    owner_id: '11111111-1111-4111-8111-111111111111',
+    currency: 'INR',
+    description: 'Station administrative funds, authorized vehicle patrol fuel, and public safety supplies',
+    is_demo: true,
+    institution_details: {
+      institution_name: 'Metropolitan Police Dept - Sector 4',
+      station_jurisdiction: 'Sector 4 & Central Ring',
+      admin_name: 'Inspector S. Rathore (Station House Officer)',
+    },
+    created_at: '2025-01-08T12:00:00Z',
+    updated_at: '2025-01-08T12:00:00Z',
   },
 ];
 
@@ -172,6 +264,20 @@ export const SEED_CATEGORIES: Category[] = [
   { id: 'cat-12', workspace_id: 'ws-palmgrove-org-002', name: 'Elevator AMC & Repairs', category_type: 'expense', created_at: '2025-01-02T10:05:00Z' },
   { id: 'cat-13', workspace_id: 'ws-palmgrove-org-002', name: 'Security Staff Payroll', category_type: 'expense', created_at: '2025-01-02T10:05:00Z' },
   { id: 'cat-14', workspace_id: 'ws-palmgrove-org-002', name: 'Diesel Generator Fuel', category_type: 'expense', created_at: '2025-01-02T10:05:00Z' },
+  // Sample Demo School Categories
+  { id: 'cat-50', workspace_id: 'ws-demo-school-005', name: 'Student Tuition & Term Fees', category_type: 'income', created_at: '2025-01-05T09:05:00Z' },
+  { id: 'cat-51', workspace_id: 'ws-demo-school-005', name: 'Faculty & Teacher Payroll', category_type: 'expense', created_at: '2025-01-05T09:05:00Z' },
+  { id: 'cat-52', workspace_id: 'ws-demo-school-005', name: 'Laboratory & Science Equipment', category_type: 'expense', created_at: '2025-01-05T09:05:00Z' },
+  // Sample Demo Hospital Categories
+  { id: 'cat-60', workspace_id: 'ws-demo-hospital-006', name: 'In-Patient & Surgical Revenue', category_type: 'income', created_at: '2025-01-06T10:05:00Z' },
+  { id: 'cat-61', workspace_id: 'ws-demo-hospital-006', name: 'Liquid Oxygen & Gas Supplies', category_type: 'expense', created_at: '2025-01-06T10:05:00Z' },
+  { id: 'cat-62', workspace_id: 'ws-demo-hospital-006', name: 'Diagnostic Equipment AMC', category_type: 'expense', created_at: '2025-01-06T10:05:00Z' },
+  // Sample Demo Office Categories
+  { id: 'cat-70', workspace_id: 'ws-demo-office-007', name: 'SaaS Client Retainers', category_type: 'income', created_at: '2025-01-07T11:05:00Z' },
+  { id: 'cat-71', workspace_id: 'ws-demo-office-007', name: 'Cloud Infrastructure & Servers', category_type: 'expense', created_at: '2025-01-07T11:05:00Z' },
+  // Sample Demo Police Categories
+  { id: 'cat-80', workspace_id: 'ws-demo-police-008', name: 'Administrative Treasury Grants', category_type: 'income', created_at: '2025-01-08T12:05:00Z' },
+  { id: 'cat-81', workspace_id: 'ws-demo-police-008', name: 'Patrol Fleet Fuel & Upkeep', category_type: 'expense', created_at: '2025-01-08T12:05:00Z' },
 ];
 
 // Seed Transactions
@@ -262,6 +368,154 @@ export const SEED_TRANSACTIONS: Transaction[] = [
     evidence_status: 'uploaded',
     created_at: '2025-01-20T16:30:00Z',
     updated_at: '2025-01-20T16:30:00Z',
+  },
+  // Demo School Transactions
+  {
+    id: 'tx-demo-school-1',
+    workspace_id: 'ws-demo-school-005',
+    category_id: 'cat-50',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'income',
+    amount: 1840000,
+    currency: 'INR',
+    description: 'Q2 Student Tuition & Lab Fee Collections (Grades 6–12)',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-10',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-10T10:00:00Z',
+    updated_at: '2025-01-10T10:00:00Z',
+  },
+  {
+    id: 'tx-demo-school-2',
+    workspace_id: 'ws-demo-school-005',
+    category_id: 'cat-51',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'expense',
+    amount: 680000,
+    currency: 'INR',
+    description: 'Teaching Faculty & Non-Teaching Staff Payroll',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-15',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-15T11:00:00Z',
+    updated_at: '2025-01-15T11:00:00Z',
+  },
+  {
+    id: 'tx-demo-school-3',
+    workspace_id: 'ws-demo-school-005',
+    category_id: 'cat-52',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'expense',
+    amount: 245000,
+    currency: 'INR',
+    description: 'Robotics & STEM Lab Microcontroller Kits (35 Units)',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-22',
+    status: 'pending_approval',
+    evidence_status: 'uploaded',
+    created_at: '2025-01-22T14:00:00Z',
+    updated_at: '2025-01-22T14:00:00Z',
+  },
+  // Demo Hospital Transactions
+  {
+    id: 'tx-demo-hosp-1',
+    workspace_id: 'ws-demo-hospital-006',
+    category_id: 'cat-60',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'income',
+    amount: 2480000,
+    currency: 'INR',
+    description: 'In-Patient Health Insurance & TPA Reimbursements',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-12',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-12T09:30:00Z',
+    updated_at: '2025-01-12T09:30:00Z',
+  },
+  {
+    id: 'tx-demo-hosp-2',
+    workspace_id: 'ws-demo-hospital-006',
+    category_id: 'cat-61',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'expense',
+    amount: 315000,
+    currency: 'INR',
+    description: 'Praxair Bulk Liquid Medical Oxygen Tank Refill',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-18',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-18T16:00:00Z',
+    updated_at: '2025-01-18T16:00:00Z',
+  },
+  // Demo Office Transactions
+  {
+    id: 'tx-demo-off-1',
+    workspace_id: 'ws-demo-office-007',
+    category_id: 'cat-70',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'income',
+    amount: 1650000,
+    currency: 'INR',
+    description: 'Q1 Enterprise Cloud Managed Services Retainer',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-14',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-14T11:00:00Z',
+    updated_at: '2025-01-14T11:00:00Z',
+  },
+  {
+    id: 'tx-demo-off-2',
+    workspace_id: 'ws-demo-office-007',
+    category_id: 'cat-71',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'expense',
+    amount: 285000,
+    currency: 'INR',
+    description: 'Production Kubernetes Cluster & Object Storage Bill',
+    payment_method: 'card',
+    transaction_date: '2025-01-19',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-19T10:00:00Z',
+    updated_at: '2025-01-19T10:00:00Z',
+  },
+  // Demo Police Transactions
+  {
+    id: 'tx-demo-pol-1',
+    workspace_id: 'ws-demo-police-008',
+    category_id: 'cat-80',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'income',
+    amount: 1200000,
+    currency: 'INR',
+    description: 'Annual Administrative Allocation from City Police Commissionerate',
+    payment_method: 'bank_transfer',
+    transaction_date: '2025-01-08',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-08T10:00:00Z',
+    updated_at: '2025-01-08T10:00:00Z',
+  },
+  {
+    id: 'tx-demo-pol-2',
+    workspace_id: 'ws-demo-police-008',
+    category_id: 'cat-81',
+    created_by: '11111111-1111-4111-8111-111111111111',
+    transaction_type: 'expense',
+    amount: 145000,
+    currency: 'INR',
+    description: 'HPCL Diesel Fuel Vouchers for 6 Sector Patrol Vehicles',
+    payment_method: 'upi',
+    transaction_date: '2025-01-16',
+    status: 'completed',
+    evidence_status: 'verified',
+    created_at: '2025-01-16T12:00:00Z',
+    updated_at: '2025-01-16T12:00:00Z',
   },
 ];
 
@@ -569,6 +823,10 @@ class JevraDataEngine {
   // -------------------------------------------------------------------------
   public isMember(userId: string | null | undefined, workspaceId: string): boolean {
     if (!userId) return false;
+    if (userId === 'demo-visitor-user-999') {
+      const ws = this.workspaces.find((w) => w.id === workspaceId);
+      return Boolean(ws && (ws.is_demo || ws.id.startsWith('ws-priya') || ws.id.startsWith('ws-palmgrove')));
+    }
     return this.members.some(
       (m) => m.workspace_id === workspaceId && m.user_id === userId && m.membership_status === 'active'
     );
@@ -576,6 +834,9 @@ class JevraDataEngine {
 
   public getRole(userId: string | null | undefined, workspaceId: string): WorkspaceRole | null {
     if (!userId) return null;
+    if (userId === 'demo-visitor-user-999') {
+      return 'owner'; // In demo exploration, visitor has full explorer capability over sample data
+    }
     const member = this.members.find(
       (m) => m.workspace_id === workspaceId && m.user_id === userId && m.membership_status === 'active'
     );
@@ -617,13 +878,17 @@ class JevraDataEngine {
   // -------------------------------------------------------------------------
   public getAuthorizedWorkspaces(userId: string | null | undefined): Workspace[] {
     if (!userId) return [];
-    // RLS: User can only see workspaces where they are active members or owner
+    if (userId === 'demo-visitor-user-999') {
+      // Demo mode isolation: return sample workspaces only
+      return this.workspaces.filter((w) => w.is_demo || w.id.startsWith('ws-priya') || w.id.startsWith('ws-palmgrove'));
+    }
+    // RLS: User can only see workspaces where they are active members or owner (excluding sample demo workspaces)
     const memberWsIds = new Set(
       this.members
         .filter((m) => m.user_id === userId && m.membership_status === 'active')
         .map((m) => m.workspace_id)
     );
-    return this.workspaces.filter((w) => memberWsIds.has(w.id) || w.owner_id === userId);
+    return this.workspaces.filter((w) => (memberWsIds.has(w.id) || w.owner_id === userId) && !w.is_demo);
   }
 
   public getWorkspace(userId: string | null | undefined, workspaceId: string): Workspace | null {
@@ -637,15 +902,31 @@ class JevraDataEngine {
 
   public createWorkspace(
     userId: string,
-    data: { name: string; workspace_type: WorkspaceType; currency?: string; description?: string }
+    data: {
+      name: string;
+      workspace_type: WorkspaceType;
+      workspace_category?: import('../types/database').WorkspaceCategory;
+      currency?: string;
+      description?: string;
+      institution_details?: import('../types/database').InstitutionalDetails;
+      verification_status?: import('../types/database').VerificationStatus;
+      is_demo?: boolean;
+    }
   ): Workspace {
+    const category = data.workspace_category || (data.workspace_type === 'personal' ? 'personal_finance' : 'office_company');
+    const verification = data.verification_status || (category === 'personal_finance' || category === 'family_finance' ? 'verified' : 'unverified');
+
     const newWs: Workspace = {
       id: `ws-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       name: data.name,
       workspace_type: data.workspace_type,
+      workspace_category: category,
+      verification_status: verification,
       owner_id: userId,
       currency: data.currency || 'INR',
       description: data.description || '',
+      institution_details: data.institution_details,
+      is_demo: data.is_demo || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -662,25 +943,101 @@ class JevraDataEngine {
     };
     this.members.push(ownerMember);
 
-    // Create default categories
-    const categoriesList =
-      data.workspace_type === 'personal'
-        ? [
-            { name: 'Salary & Earnings', type: 'income' as const },
-            { name: 'Investments & Dividends', type: 'income' as const },
-            { name: 'Housing & Rent', type: 'expense' as const },
-            { name: 'Groceries & Household', type: 'expense' as const },
-            { name: 'Utilities & Bills', type: 'expense' as const },
-            { name: 'Health & Medical', type: 'expense' as const },
-          ]
-        : [
-            { name: 'Member Maintenance Dues', type: 'income' as const },
-            { name: 'Donations & Grants', type: 'income' as const },
-            { name: 'Vendor & Facility Services', type: 'expense' as const },
-            { name: 'Electricity & Utilities', type: 'expense' as const },
-            { name: 'Staff Salaries', type: 'expense' as const },
-            { name: 'Repairs & Capital Works', type: 'expense' as const },
-          ];
+    // Tailored category setup based on workspace_category
+    let categoriesList: { name: string; type: 'income' | 'expense' }[] = [];
+
+    switch (category) {
+      case 'school_education':
+        categoriesList = [
+          { name: 'Student Tuition & Term Fees', type: 'income' },
+          { name: 'Annual Grants & Donations', type: 'income' },
+          { name: 'Faculty & Teacher Payroll', type: 'expense' },
+          { name: 'Laboratory & Science Equipment', type: 'expense' },
+          { name: 'Library & Learning Materials', type: 'expense' },
+          { name: 'Campus Maintenance & Utilities', type: 'expense' },
+        ];
+        break;
+      case 'hospital_health':
+        categoriesList = [
+          { name: 'In-Patient & Consultation Revenue', type: 'income' },
+          { name: 'Health Insurance Claims Reimbursed', type: 'income' },
+          { name: 'Pharmacy & Drug Consumables', type: 'expense' },
+          { name: 'Diagnostic & Surgical Equipment AMC', type: 'expense' },
+          { name: 'Doctors & Clinical Staff Payroll', type: 'expense' },
+          { name: 'Oxygen & Medical Gas Supplies', type: 'expense' },
+        ];
+        break;
+      case 'police_station':
+        categoriesList = [
+          { name: 'Statutory Administrative Allocation', type: 'income' },
+          { name: 'Station Contingency Grant', type: 'income' },
+          { name: 'Patrol Vehicle Fuel & Maintenance', type: 'expense' },
+          { name: 'Station Upkeep & Office Supplies', type: 'expense' },
+          { name: 'Security & Surveillance Logistics', type: 'expense' },
+          { name: 'Special Investigation Allowance', type: 'expense' },
+        ];
+        break;
+      case 'fire_station':
+        categoriesList = [
+          { name: 'Municipal Fire Service Allocation', type: 'income' },
+          { name: 'Emergency Contingency Fund', type: 'income' },
+          { name: 'Fire Engine & Ladder Fleet Service', type: 'expense' },
+          { name: 'Breathing Apparatus & Safety Gear', type: 'expense' },
+          { name: 'Fuel & Rapid Response Supplies', type: 'expense' },
+          { name: 'Station Operations & Communications', type: 'expense' },
+        ];
+        break;
+      case 'small_business':
+        categoriesList = [
+          { name: 'Counter Cash & UPI Sales', type: 'income' },
+          { name: 'Wholesale B2B Invoices', type: 'income' },
+          { name: 'Distributor Stock Purchases', type: 'expense' },
+          { name: 'Commercial Shop Rent', type: 'expense' },
+          { name: 'Store Utilities & Electricity', type: 'expense' },
+          { name: 'Staff Daily Wages', type: 'expense' },
+        ];
+        break;
+      case 'society_apartment':
+        categoriesList = [
+          { name: 'Resident Maintenance Collections', type: 'income' },
+          { name: 'Clubhouse & Amenity Fees', type: 'income' },
+          { name: 'Elevator Maintenance AMC', type: 'expense' },
+          { name: 'Security Agency Payroll', type: 'expense' },
+          { name: 'Common Water & Electricity', type: 'expense' },
+          { name: 'Sinking Fund Capital Reserve', type: 'expense' },
+        ];
+        break;
+      case 'office_company':
+        categoriesList = [
+          { name: 'Client Invoicing & Retainers', type: 'income' },
+          { name: 'Consulting Revenue', type: 'income' },
+          { name: 'Employee Salaries & Benefits', type: 'expense' },
+          { name: 'Cloud Infrastructure & SaaS', type: 'expense' },
+          { name: 'Office Lease & Facility Costs', type: 'expense' },
+          { name: 'Business Travel & Conveyance', type: 'expense' },
+        ];
+        break;
+      case 'family_finance':
+        categoriesList = [
+          { name: 'Primary Household Income', type: 'income' },
+          { name: 'Spouse / Secondary Income', type: 'income' },
+          { name: 'Groceries & Provisions', type: 'expense' },
+          { name: 'Children School & Daycare Fees', type: 'expense' },
+          { name: 'Rent / Home Loan EMI', type: 'expense' },
+          { name: 'Family Health & Insurance', type: 'expense' },
+        ];
+        break;
+      default:
+        categoriesList = [
+          { name: 'Primary Income & Earnings', type: 'income' },
+          { name: 'Dividends & Capital Gains', type: 'income' },
+          { name: 'Housing & Accommodation', type: 'expense' },
+          { name: 'Groceries & Household Supplies', type: 'expense' },
+          { name: 'Utilities & Subscriptions', type: 'expense' },
+          { name: 'Health & Medical', type: 'expense' },
+        ];
+        break;
+    }
 
     categoriesList.forEach((c) => {
       this.categories.push({
@@ -696,6 +1053,7 @@ class JevraDataEngine {
     this.appendAuditLog(newWs.id, userId, 'WORKSPACE_CREATED', 'workspace', newWs.id, null, {
       name: newWs.name,
       type: newWs.workspace_type,
+      category: newWs.workspace_category,
       currency: newWs.currency,
     });
 
