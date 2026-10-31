@@ -6,7 +6,7 @@ import { formatCurrency, Budget, FinancialGoal } from '../../types/database';
 import { PieChart, Target, Plus, TrendingUp, CheckCircle2 } from 'lucide-react';
 
 export const BudgetsView: React.FC = () => {
-  const { activeWorkspace, canManageBudgets } = useWorkspace();
+  const { activeWorkspace, canManageBudgets, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
 
   const [showAddBudget, setShowAddBudget] = useState(false);
@@ -25,12 +25,12 @@ export const BudgetsView: React.FC = () => {
   const budgets = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getBudgets(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id, showAddBudget]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion, showAddBudget]);
 
   const goals = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getGoals(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id, showAddGoal]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion, showAddGoal]);
 
   const currency = activeWorkspace?.currency || 'INR';
 

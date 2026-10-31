@@ -739,9 +739,28 @@ class JevraDataEngine {
   private auditLogs: AuditLog[] = [];
   private evidenceFiles: EvidenceFile[] = [];
   private notifications: Notification[] = [];
+  private listeners: Set<() => void> = new Set();
+  private persistTimeout: any = null;
 
   constructor() {
     this.init();
+  }
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  public notify() {
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (err) {
+        console.error('DataEngine subscriber error:', err);
+      }
+    });
   }
 
   private init() {
@@ -792,29 +811,40 @@ class JevraDataEngine {
   }
 
   private persist() {
-    try {
-      localStorage.setItem(
-        'jevra_data_store',
-        JSON.stringify({
-          profiles: this.profiles,
-          workspaces: this.workspaces,
-          members: this.members,
-          invitations: this.invitations,
-          categories: this.categories,
-          transactions: this.transactions,
-          budgets: this.budgets,
-          goals: this.goals,
-          bills: this.bills,
-          loans: this.loans,
-          contributions: this.contributions,
-          approvals: this.approvals,
-          auditLogs: this.auditLogs,
-          evidenceFiles: this.evidenceFiles,
-          notifications: this.notifications,
-        })
-      );
-    } catch (err) {
-      console.warn('Storage persistence warning:', err);
+    // 1. Immediately notify all active UI components for instant 0ms latency rendering
+    this.notify();
+
+    // 2. Perform storage serialization asynchronously so the UI thread is not blocked
+    if (typeof window !== 'undefined') {
+      if (this.persistTimeout) {
+        clearTimeout(this.persistTimeout);
+      }
+      this.persistTimeout = setTimeout(() => {
+        try {
+          localStorage.setItem(
+            'jevra_data_store',
+            JSON.stringify({
+              profiles: this.profiles,
+              workspaces: this.workspaces,
+              members: this.members,
+              invitations: this.invitations,
+              categories: this.categories,
+              transactions: this.transactions,
+              budgets: this.budgets,
+              goals: this.goals,
+              bills: this.bills,
+              loans: this.loans,
+              contributions: this.contributions,
+              approvals: this.approvals,
+              auditLogs: this.auditLogs,
+              evidenceFiles: this.evidenceFiles,
+              notifications: this.notifications,
+            })
+          );
+        } catch (err) {
+          console.warn('Storage persistence warning:', err);
+        }
+      }, 50);
     }
   }
 
@@ -1061,6 +1091,36 @@ class JevraDataEngine {
     return newWs;
   }
 
+  public deleteWorkspace(userId: string, workspaceId: string): { success: boolean; error?: string } {
+    if (!this.hasRole(userId, workspaceId, ['owner'])) {
+      return { success: false, error: 'Permission denied: Only the workspace owner can delete this workspace.' };
+    }
+
+    const ws = this.workspaces.find((w) => w.id === workspaceId);
+    if (!ws) {
+      return { success: false, error: 'Workspace not found.' };
+    }
+
+    // Record audit log before cleanup
+    this.appendAuditLog(workspaceId, userId, 'WORKSPACE_DELETED', 'workspace', workspaceId, { name: ws.name }, null);
+
+    // Remove workspace and all associated relations
+    this.workspaces = this.workspaces.filter((w) => w.id !== workspaceId);
+    this.members = this.members.filter((m) => m.workspace_id !== workspaceId);
+    this.invitations = this.invitations.filter((i) => i.workspace_id !== workspaceId);
+    this.transactions = this.transactions.filter((t) => t.workspace_id !== workspaceId);
+    this.categories = this.categories.filter((c) => c.workspace_id !== workspaceId);
+    this.budgets = this.budgets.filter((b) => b.workspace_id !== workspaceId);
+    this.goals = this.goals.filter((g) => g.workspace_id !== workspaceId);
+    this.bills = this.bills.filter((b) => b.workspace_id !== workspaceId);
+    this.loans = this.loans.filter((l) => l.workspace_id !== workspaceId);
+    this.approvals = this.approvals.filter((a) => a.workspace_id !== workspaceId);
+    this.contributions = this.contributions.filter((c) => c.workspace_id !== workspaceId);
+    this.persist();
+
+    return { success: true };
+  }
+
   public getWorkspaceMembers(userId: string, workspaceId: string): (WorkspaceMember & { profile?: Profile })[] {
     if (!this.isMember(userId, workspaceId)) return [];
     return this.members
@@ -1278,6 +1338,102 @@ class JevraDataEngine {
 
     this.persist();
     return { success: true, transaction: tx };
+  }
+
+  public updateTransaction(
+    userId: string,
+    workspaceId: string,
+    transactionId: string,
+    data: {
+      category_id?: string | null;
+      transaction_type?: Transaction['transaction_type'];
+      amount?: number;
+      description?: string;
+      payment_method?: Transaction['payment_method'];
+      transaction_date?: string;
+    }
+  ): { success: boolean; transaction?: Transaction; error?: string } {
+    if (!this.hasRole(userId, workspaceId, ['owner', 'finance_manager', 'treasurer', 'member'])) {
+      return { success: false, error: 'Permission denied: Insufficient role to edit transactions.' };
+    }
+
+    const tx = this.transactions.find((t) => t.id === transactionId && t.workspace_id === workspaceId);
+    if (!tx) {
+      return { success: false, error: 'Transaction not found in this workspace.' };
+    }
+
+    if (data.amount !== undefined && (data.amount <= 0 || isNaN(data.amount))) {
+      return { success: false, error: 'Amount must be greater than zero.' };
+    }
+
+    const previousState = {
+      amount: tx.amount,
+      type: tx.transaction_type,
+      description: tx.description,
+      category_id: tx.category_id,
+      payment_method: tx.payment_method,
+      transaction_date: tx.transaction_date,
+    };
+
+    if (data.amount !== undefined) tx.amount = Number(data.amount.toFixed(2));
+    if (data.transaction_type) tx.transaction_type = data.transaction_type;
+    if (data.description !== undefined) tx.description = data.description.trim();
+    if (data.category_id !== undefined) tx.category_id = data.category_id || null;
+    if (data.payment_method) tx.payment_method = data.payment_method;
+    if (data.transaction_date) tx.transaction_date = data.transaction_date;
+    tx.updated_at = new Date().toISOString();
+
+    this.appendAuditLog(
+      workspaceId,
+      userId,
+      'TRANSACTION_UPDATED',
+      'transactions',
+      tx.id,
+      previousState,
+      {
+        amount: tx.amount,
+        type: tx.transaction_type,
+        description: tx.description,
+        category_id: tx.category_id,
+        payment_method: tx.payment_method,
+        transaction_date: tx.transaction_date,
+      }
+    );
+
+    this.persist();
+    return { success: true, transaction: tx };
+  }
+
+  public deleteTransaction(
+    userId: string,
+    workspaceId: string,
+    transactionId: string
+  ): { success: boolean; error?: string } {
+    if (!this.hasRole(userId, workspaceId, ['owner', 'finance_manager', 'treasurer', 'member'])) {
+      return { success: false, error: 'Permission denied: Insufficient role to delete transactions.' };
+    }
+
+    const txIndex = this.transactions.findIndex((t) => t.id === transactionId && t.workspace_id === workspaceId);
+    if (txIndex === -1) {
+      return { success: false, error: 'Transaction not found in this workspace.' };
+    }
+
+    const tx = this.transactions[txIndex];
+    this.transactions.splice(txIndex, 1);
+    this.approvals = this.approvals.filter((a) => a.transaction_id !== transactionId);
+
+    this.appendAuditLog(
+      workspaceId,
+      userId,
+      'TRANSACTION_DELETED',
+      'transactions',
+      transactionId,
+      { amount: tx.amount, description: tx.description, type: tx.transaction_type },
+      null
+    );
+
+    this.persist();
+    return { success: true };
   }
 
   // -------------------------------------------------------------------------

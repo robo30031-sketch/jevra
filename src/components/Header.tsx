@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewTransaction,
   onOpenNewWorkspace,
 }) => {
-  const { workspaces, activeWorkspace, setActiveWorkspaceId, userRole, canRecordTransaction } = useWorkspace();
+  const { workspaces, activeWorkspace, setActiveWorkspaceId, userRole, canRecordTransaction, dataVersion } = useWorkspace();
   const { currentUser, signOut, isDemoMode, exitDemoMode } = useAuth();
 
   const [wsDropdownOpen, setWsDropdownOpen] = useState(false);

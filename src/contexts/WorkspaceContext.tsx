@@ -9,6 +9,7 @@ interface WorkspaceContextType {
   userRole: WorkspaceRole | null;
   members: (WorkspaceMember & { profile?: import('../types/database').Profile })[];
   isLoading: boolean;
+  dataVersion: number;
   canManageMembers: boolean;
   canManageBudgets: boolean;
   canRecordTransaction: boolean;
@@ -29,6 +30,7 @@ interface WorkspaceContextType {
   }) => Promise<{ success: boolean; workspace?: Workspace; error?: string }>;
   inviteMember: (email: string, role: WorkspaceRole) => Promise<{ success: boolean; error?: string }>;
   updateMemberRole: (targetUserId: string, newRole: WorkspaceRole) => Promise<{ success: boolean; error?: string }>;
+  deleteWorkspace: (workspaceId: string) => Promise<{ success: boolean; error?: string }>;
   refreshWorkspaceData: () => void;
 }
 
@@ -42,8 +44,17 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [members, setMembers] = useState<(WorkspaceMember & { profile?: import('../types/database').Profile })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataVersion, setDataVersion] = useState(0);
 
-  const loadWorkspacesForUser = () => {
+  // Instant reactive synchronization with dataEngine mutations
+  useEffect(() => {
+    const unsubscribe = dataEngine.subscribe(() => {
+      setDataVersion((v) => v + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  const loadWorkspacesForUser = (isInitial = false) => {
     if (!currentUser) {
       setWorkspaces([]);
       setActiveWorkspace(null);
@@ -52,7 +63,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
 
-    setIsLoading(true);
+    if (isInitial) {
+      setIsLoading(true);
+    }
     // Enforce RLS: Only workspaces where user is active member or owner
     const authorized = dataEngine.getAuthorizedWorkspaces(currentUser.id);
     setWorkspaces(authorized);
@@ -71,11 +84,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } else {
       setMembers([]);
     }
-    setIsLoading(false);
+    if (isInitial) {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadWorkspacesForUser();
+    loadWorkspacesForUser(true);
   }, [currentUser?.id]);
 
   const setActiveWorkspaceId = (workspaceId: string) => {
@@ -151,8 +166,44 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return res;
   };
 
+  const deleteWorkspace = async (workspaceId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser) return { success: false, error: 'Not authenticated' };
+    const res = dataEngine.deleteWorkspace(currentUser.id, workspaceId);
+    if (!res.success) return res;
+
+    // Refresh authorized workspaces
+    const authorized = dataEngine.getAuthorizedWorkspaces(currentUser.id);
+    setWorkspaces(authorized);
+
+    // If active was deleted, switch to another workspace or create a default personal one if empty
+    if (activeWorkspace?.id === workspaceId) {
+      if (authorized.length > 0) {
+        const next = authorized[0];
+        setActiveWorkspace(next);
+        localStorage.setItem(ACTIVE_WS_STORAGE_KEY, next.id);
+        setMembers(dataEngine.getWorkspaceMembers(currentUser.id, next.id));
+      } else {
+        const fallback = dataEngine.createWorkspace(currentUser.id, {
+          name: `${currentUser.full_name}'s Vault`,
+          workspace_type: 'personal',
+          workspace_category: 'personal_finance',
+          currency: currentUser.preferred_currency || 'INR',
+          description: 'Personal financial ledger and savings',
+        });
+        const freshList = dataEngine.getAuthorizedWorkspaces(currentUser.id);
+        setWorkspaces(freshList);
+        setActiveWorkspace(fallback);
+        localStorage.setItem(ACTIVE_WS_STORAGE_KEY, fallback.id);
+        setMembers(dataEngine.getWorkspaceMembers(currentUser.id, fallback.id));
+      }
+    }
+    setDataVersion((v) => v + 1);
+    return { success: true };
+  };
+
   const refreshWorkspaceData = () => {
-    loadWorkspacesForUser();
+    loadWorkspacesForUser(false);
+    setDataVersion((v) => v + 1);
   };
 
   const value = useMemo(
@@ -162,6 +213,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       userRole,
       members,
       isLoading,
+      dataVersion,
       canManageMembers,
       canManageBudgets,
       canRecordTransaction,
@@ -173,6 +225,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       createWorkspace,
       inviteMember,
       updateMemberRole,
+      deleteWorkspace,
       refreshWorkspaceData,
     }),
     [
@@ -181,6 +234,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       userRole,
       members,
       isLoading,
+      dataVersion,
       canManageMembers,
       canManageBudgets,
       canRecordTransaction,

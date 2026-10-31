@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { WORKSPACE_CATEGORIES } from '../../types/database';
-import { Settings, Shield, User, Building2, CheckCircle2, Lock, Save } from 'lucide-react';
+import { Settings, User, Building2, CheckCircle2, Lock, Save, Trash2, AlertTriangle } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, isOwner, deleteWorkspace } = useWorkspace();
   const { currentUser, updateProfile } = useAuth();
 
   const [fullName, setFullName] = useState(currentUser?.full_name || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
   const [savedMsg, setSavedMsg] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmName, setConfirmName] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const categoryInfo = activeWorkspace?.workspace_category
     ? WORKSPACE_CATEGORIES[activeWorkspace.workspace_category]
@@ -21,6 +25,22 @@ export const SettingsView: React.FC = () => {
     await updateProfile({ full_name: fullName, phone });
     setSavedMsg(true);
     setTimeout(() => setSavedMsg(false), 2500);
+  };
+
+  const handleDeleteWorkspace = async () => {
+    if (!activeWorkspace) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const res = await deleteWorkspace(activeWorkspace.id);
+    setIsDeleting(false);
+
+    if (!res.success) {
+      setDeleteError(res.error || 'Failed to delete workspace.');
+    } else {
+      setShowDeleteModal(false);
+      setConfirmName('');
+    }
   };
 
   return (
@@ -143,6 +163,33 @@ export const SettingsView: React.FC = () => {
         </form>
       </div>
 
+      {/* Danger Zone: Delete Workspace */}
+      <div className="bg-rose-50/70 rounded-2xl border border-rose-200 p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>Danger Zone: Delete Workspace</span>
+            </h3>
+            <p className="text-xs text-rose-700 mt-1 max-w-xl">
+              Permanently delete <strong className="text-rose-950 font-bold">{activeWorkspace?.name}</strong>. All associated transactions, budgets, bills, loan commitments, and member authorizations in this workspace will be irreversibly removed.
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              setDeleteError(null);
+              setConfirmName('');
+              setShowDeleteModal(true);
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete Workspace</span>
+          </button>
+        </div>
+      </div>
+
       {/* Security Statement */}
       <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 text-xs">
         <div className="flex items-center gap-2 text-cyan-400 font-bold mb-1">
@@ -153,6 +200,64 @@ export const SettingsView: React.FC = () => {
           All records created in {activeWorkspace?.name} are cryptographically isolated at the database level. Members cannot inspect records outside their authorized workspaces. Co-membership in an organisation conveys zero access to private personal finance vaults.
         </p>
       </div>
+
+      {/* Delete Workspace Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-xs">
+            <div className="flex items-center gap-2 text-rose-600 font-bold text-sm mb-2">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <span>Confirm Workspace Deletion</span>
+            </div>
+
+            <p className="text-slate-600 leading-relaxed">
+              Are you sure you want to permanently delete{' '}
+              <strong className="text-slate-900 font-bold">{activeWorkspace?.name}</strong>?
+            </p>
+            <p className="text-rose-700 font-semibold mt-2 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+              Warning: This action is permanent and cannot be undone. All recorded transactions, bills, and ledgers will be wiped.
+            </p>
+
+            {deleteError && (
+              <div className="mt-3 p-2.5 rounded-xl bg-red-100 text-red-800 font-medium">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="mt-4">
+              <label className="block text-slate-700 font-medium mb-1">
+                To confirm, type <span className="font-bold select-all text-slate-900">{activeWorkspace?.name}</span> below:
+              </label>
+              <input
+                type="text"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={activeWorkspace?.name}
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 outline-hidden font-medium"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={confirmName.trim() !== activeWorkspace?.name.trim() || isDeleting}
+                onClick={handleDeleteWorkspace}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl cursor-pointer shadow-xs transition flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Deleting...' : 'Permanently Delete'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

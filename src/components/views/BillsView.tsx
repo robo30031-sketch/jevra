@@ -6,7 +6,7 @@ import { formatCurrency, Bill } from '../../types/database';
 import { CalendarClock, Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 export const BillsView: React.FC = () => {
-  const { activeWorkspace, canRecordTransaction } = useWorkspace();
+  const { activeWorkspace, canRecordTransaction, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
   const [showAddBill, setShowAddBill] = useState(false);
   const [title, setTitle] = useState('');
@@ -18,7 +18,7 @@ export const BillsView: React.FC = () => {
   const bills = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getBills(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id, showAddBill]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion, showAddBill]);
 
   const currency = activeWorkspace?.currency || 'INR';
 

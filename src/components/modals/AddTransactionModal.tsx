@@ -59,6 +59,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen
     if (!res.success) {
       setError(res.error || 'Failed to record entry');
     } else {
+      setAmount('');
+      setDescription('');
+      setCategoryId('');
+      setError(null);
       onSuccess();
       onClose();
     }

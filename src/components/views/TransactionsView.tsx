@@ -15,24 +15,29 @@ import {
   XCircle,
   AlertTriangle,
   Upload,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
+import { EditTransactionModal } from '../modals/EditTransactionModal';
 
 interface TransactionsViewProps {
   onOpenNewTransaction: () => void;
 }
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({ onOpenNewTransaction }) => {
-  const { activeWorkspace, userRole, canRecordTransaction } = useWorkspace();
+  const { activeWorkspace, userRole, canRecordTransaction, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
 
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [evidenceModalTx, setEvidenceModalTx] = useState<Transaction | null>(null);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
 
   const transactions = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getTransactions(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
@@ -117,12 +122,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ onOpenNewTra
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Evidence</th>
                 <th className="py-3 px-4 text-right">Amount</th>
+                <th className="py-3 px-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
                     No transactions match the selected filter.
                   </td>
                 </tr>
@@ -181,6 +187,24 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ onOpenNewTra
                       >
                         {isPositive ? '+' : '-'} {formatCurrency(t.amount, t.currency)}
                       </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => setEditingTx(t)}
+                            title="Edit entry"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingTx(t)}
+                            title="Delete entry"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
@@ -189,6 +213,64 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ onOpenNewTra
           </table>
         </div>
       </div>
+
+      {/* Edit Transaction Modal */}
+      <EditTransactionModal
+        transaction={editingTx}
+        isOpen={!!editingTx}
+        onClose={() => setEditingTx(null)}
+        onSuccess={() => setEditingTx(null)}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deletingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-xs">
+            <div className="flex items-center gap-2 text-rose-600 font-bold text-sm mb-2">
+              <Trash2 className="w-5 h-5 shrink-0" />
+              <span>Delete Financial Entry</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed">
+              Are you sure you want to permanently delete this record from the ledger?
+            </p>
+            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Description:</span>
+                <span className="font-semibold text-slate-900 truncate max-w-[170px]">{deletingTx.description}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Amount:</span>
+                <span className="font-mono font-bold text-slate-900">{formatCurrency(deletingTx.amount, deletingTx.currency)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Nature:</span>
+                <span className="capitalize font-semibold text-slate-700">{deletingTx.transaction_type}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingTx(null)}
+                className="px-3.5 py-1.5 text-slate-600 hover:text-slate-800 font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentUser && activeWorkspace) {
+                    dataEngine.deleteTransaction(currentUser.id, activeWorkspace.id, deletingTx.id);
+                  }
+                  setDeletingTx(null);
+                }}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl cursor-pointer shadow-xs transition"
+              >
+                Delete Entry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Evidence Modal */}
       {evidenceModalTx && (

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { dataEngine } from '../../lib/dataEngine';
@@ -23,6 +23,8 @@ import {
   Landmark,
   FileText,
   BadgeCheck,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -35,6 +37,8 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { EditTransactionModal } from '../modals/EditTransactionModal';
+import { Transaction } from '../../types/database';
 
 interface AdaptiveDashboardProps {
   onOpenNewTransaction: () => void;
@@ -47,8 +51,11 @@ export const AdaptiveDashboard: React.FC<AdaptiveDashboardProps> = ({
   onOpenNewTransaction,
   onNavigateTab,
 }) => {
-  const { activeWorkspace, userRole, canRecordTransaction, canApprove } = useWorkspace();
+  const { activeWorkspace, userRole, canRecordTransaction, canApprove, dataVersion } = useWorkspace();
   const { currentUser, isDemoMode } = useAuth();
+
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
 
   const category = activeWorkspace?.workspace_category || 'personal_finance';
   const categoryInfo = WORKSPACE_CATEGORIES[category] || WORKSPACE_CATEGORIES.personal_finance;
@@ -58,22 +65,22 @@ export const AdaptiveDashboard: React.FC<AdaptiveDashboardProps> = ({
   const transactions = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getTransactions(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   const budgets = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getBudgets(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   const bills = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getBills(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   const approvals = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getApprovals(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   // Aggregates
   const totalInflow = useMemo(() => {
@@ -411,6 +418,7 @@ export const AdaptiveDashboard: React.FC<AdaptiveDashboardProps> = ({
                   <th className="pb-3 font-medium">Payment</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium text-right">Amount</th>
+                  <th className="pb-3 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -448,6 +456,24 @@ export const AdaptiveDashboard: React.FC<AdaptiveDashboardProps> = ({
                       >
                         {isPositive ? '+' : '-'} {formatCurrency(t.amount, t.currency)}
                       </td>
+                      <td className="py-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => setEditingTx(t)}
+                            title="Edit entry"
+                            className="p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingTx(t)}
+                            title="Delete entry"
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -456,6 +482,64 @@ export const AdaptiveDashboard: React.FC<AdaptiveDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Edit Transaction Modal */}
+      <EditTransactionModal
+        transaction={editingTx}
+        isOpen={!!editingTx}
+        onClose={() => setEditingTx(null)}
+        onSuccess={() => setEditingTx(null)}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deletingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-xs">
+            <div className="flex items-center gap-2 text-rose-600 font-bold text-sm mb-2">
+              <Trash2 className="w-5 h-5 shrink-0" />
+              <span>Delete Financial Entry</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed">
+              Are you sure you want to permanently delete this record from the ledger?
+            </p>
+            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Description:</span>
+                <span className="font-semibold text-slate-900 truncate max-w-[170px]">{deletingTx.description}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Amount:</span>
+                <span className="font-mono font-bold text-slate-900">{formatCurrency(deletingTx.amount, deletingTx.currency)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Nature:</span>
+                <span className="capitalize font-semibold text-slate-700">{deletingTx.transaction_type}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingTx(null)}
+                className="px-3.5 py-1.5 text-slate-600 hover:text-slate-800 font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentUser && activeWorkspace) {
+                    dataEngine.deleteTransaction(currentUser.id, activeWorkspace.id, deletingTx.id);
+                  }
+                  setDeletingTx(null);
+                }}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl cursor-pointer shadow-xs transition"
+              >
+                Delete Entry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

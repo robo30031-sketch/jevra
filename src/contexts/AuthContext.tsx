@@ -86,8 +86,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const savedUserId = localStorage.getItem(ACTIVE_USER_STORAGE_KEY);
-      const user = savedUserId ? dataEngine.getProfile(savedUserId) : SEED_USERS[0];
-      setCurrentUser(user || SEED_USERS[0]);
+      if (savedUserId) {
+        const user = dataEngine.getProfile(savedUserId);
+        setCurrentUser(user || null);
+      } else {
+        setCurrentUser(null);
+      }
       setIsLoading(false);
     };
 

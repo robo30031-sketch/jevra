@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const LoansView: React.FC = () => {
-  const { activeWorkspace, canRecordTransaction } = useWorkspace();
+  const { activeWorkspace, canRecordTransaction, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -38,8 +38,7 @@ export const LoansView: React.FC = () => {
   const loans = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getLoans(currentUser.id, activeWorkspace.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?.id, activeWorkspace?.id, refreshKey]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion, refreshKey]);
 
   // Filtered loans list
   const filteredLoans = useMemo(() => {

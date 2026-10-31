@@ -14,14 +14,14 @@ import {
 } from 'recharts';
 
 export const ReportsView: React.FC = () => {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
   const currency = activeWorkspace?.currency || 'INR';
 
   const transactions = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getTransactions(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion]);
 
   const totalInflow = transactions
     .filter((t) => ['income', 'contribution'].includes(t.transaction_type))

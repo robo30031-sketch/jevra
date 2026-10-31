@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const ApprovalsView: React.FC = () => {
-  const { activeWorkspace, userRole, canApprove } = useWorkspace();
+  const { activeWorkspace, userRole, canApprove, dataVersion } = useWorkspace();
   const { currentUser } = useAuth();
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [actionNotice, setActionNotice] = useState<{ id: string; error?: string; success?: string } | null>(null);
@@ -23,7 +23,7 @@ export const ApprovalsView: React.FC = () => {
   const approvals = useMemo(() => {
     if (!currentUser || !activeWorkspace) return [];
     return dataEngine.getApprovals(currentUser.id, activeWorkspace.id);
-  }, [currentUser?.id, activeWorkspace?.id, actionNotice]);
+  }, [currentUser?.id, activeWorkspace?.id, dataVersion, actionNotice]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return approvals;
